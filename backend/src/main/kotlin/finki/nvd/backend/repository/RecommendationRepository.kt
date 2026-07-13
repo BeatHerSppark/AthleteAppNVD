@@ -1,0 +1,11 @@
+package finki.nvd.backend.repository
+import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.stereotype.Repository
+import finki.nvd.backend.model.Recommendation
+
+@Repository
+interface RecommendationRepository : JpaRepository<Recommendation, Long> {
+    fun findByReportReportId(reportId: Long): List<Recommendation>
+    fun findByReportDoctorDoctorId(id: Long): List<Recommendation>
+    fun findByReportPatientPatientId(id: Long): List<Recommendation>
+}

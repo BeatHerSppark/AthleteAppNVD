@@ -1,0 +1,28 @@
+package finki.nvd.backend.dto
+
+import finki.nvd.backend.model.AthleteReport
+import finki.nvd.backend.model.enum.AthleteReportStatus
+import java.math.BigDecimal
+import java.time.LocalDateTime
+
+data class AthleteReportShortDTO (
+    val id: Long,
+    val createdAt: LocalDateTime,
+    val doctorName: String,
+    val patientName: String,
+    val status: AthleteReportStatus,
+    val vo2Max: BigDecimal
+) {
+    companion object {
+        fun fromEntity(report: AthleteReport): AthleteReportShortDTO {
+            return AthleteReportShortDTO(
+                id         = report.reportId!!,
+                createdAt  = report.createdAt,
+                doctorName = "${report.doctor.user.firstName} ${report.doctor.user.lastName}",
+                patientName = "${report.patient.user.firstName} ${report.patient.user.lastName}",
+                status     = report.status,
+                vo2Max     = report.vo2Max
+            )
+        }
+    }
+}

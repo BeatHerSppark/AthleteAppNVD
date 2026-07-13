@@ -1,0 +1,79 @@
+package finki.nvd.backend.api
+
+import jakarta.persistence.EntityNotFoundException
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
+import org.springframework.data.web.PageableDefault
+import org.springframework.security.core.Authentication
+import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.*
+import finki.nvd.backend.dto.AthleteReportShortDTO
+import finki.nvd.backend.dto.CreateDoctorDTO
+import finki.nvd.backend.dto.PatientDTO
+import finki.nvd.backend.model.Doctor
+import finki.nvd.backend.repository.DoctorRepository
+import finki.nvd.backend.security.model.UserPrincipal
+import finki.nvd.backend.service.AthleteReportService
+import finki.nvd.backend.service.DoctorService
+import finki.nvd.backend.service.PatientService
+
+@RestController
+@RequestMapping("/api/doctor")
+@CrossOrigin(origins = ["http://localhost:4200"])
+class DoctorController(
+    val doctorRepository: DoctorRepository,
+    val doctorService: DoctorService,
+    val athleteReportService: AthleteReportService,
+    val patientService: PatientService
+) {
+    @GetMapping
+    fun getAllDoctors(): List<Doctor> = doctorRepository.findAll()
+
+    @GetMapping("/{id}")
+    fun getDoctor(@PathVariable id: Long): ResponseEntity<Doctor> =
+        doctorRepository.findById(id).map { ResponseEntity.ok(it) }
+            .orElseThrow { EntityNotFoundException("Doctor not found") }
+
+
+    @PostMapping("/create-doctor-user")
+    fun createDoctorEntityForExistingUserWithRoleDoctor(
+        @RequestBody doctorData: CreateDoctorDTO,
+        authentication: Authentication
+    ): ResponseEntity<Doctor> {
+        val principal = authentication.principal as UserPrincipal
+        val userId = principal.appUser.userId
+        return doctorService.createDoctorFromUser(userId!!, doctorData.specialization).let { ResponseEntity.ok(it) }
+    }
+
+    @GetMapping("{doctorId}/patients")
+    fun getDoctorPatients(
+        @PathVariable doctorId: Long,
+        @PageableDefault(
+            size = 10,
+            sort = ["dateOfLatestCheckUp"],
+            direction = Sort.Direction.DESC
+        ) pageable: Pageable
+    ): ResponseEntity<Page<PatientDTO>> =
+        ResponseEntity.ok(patientService.getPatientsByDoctorId(doctorId, pageable))
+
+    @GetMapping("{doctorId}/patients/search")
+    fun searchDoctorPatients(
+        @PathVariable doctorId: Long,
+        @RequestParam(required = false, defaultValue = "") embg: String,
+        @RequestParam(required = false, defaultValue = false.toString()) patientType: Boolean?,
+        @PageableDefault(size = 10, sort = ["dateOfLatestCheckUp"], direction = Sort.Direction.DESC) pageable: Pageable
+    ): ResponseEntity<Page<PatientDTO>> =
+        if (patientType == true) {
+            ResponseEntity.ok(patientService.getUnassignedPatients(embg, pageable))
+        } else {
+            ResponseEntity.ok(patientService.searchPatientsByDoctorIdAndEmbg(doctorId, embg, pageable))
+        }
+
+    @GetMapping("{doctorId}/reports")
+    fun getDoctorReports(
+        @PathVariable doctorId: Long,
+        @PageableDefault(size = 10, sort = ["createdAt"], direction = Sort.Direction.DESC) pageable: Pageable
+    ): ResponseEntity<Page<AthleteReportShortDTO>> =
+        ResponseEntity.ok(athleteReportService.getReportsShortByDoctorId(doctorId, pageable))
+}

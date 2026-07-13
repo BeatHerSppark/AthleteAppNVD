@@ -1,0 +1,65 @@
+package finki.nvd.backend.security.service
+
+import org.springframework.security.authentication.AuthenticationManager
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.Authentication
+import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.security.core.userdetails.UsernameNotFoundException
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import org.springframework.stereotype.Service
+import finki.nvd.backend.security.dtos.LoginRequest
+import finki.nvd.backend.security.dtos.RegisterRequest
+import finki.nvd.backend.security.model.AppUser
+import finki.nvd.backend.security.model.UserRole
+import finki.nvd.backend.security.repository.AppUserRepository
+import java.time.LocalDateTime
+
+@Service
+class UserService(
+    private val userRepository: AppUserRepository,
+    private val authenticationManager: AuthenticationManager,
+    private val jwtService: JWTService
+) {
+    private val encoder = BCryptPasswordEncoder(12)
+
+    fun register(request: RegisterRequest): AppUser {
+        if (request.password != request.confirmPassword) {
+            throw RuntimeException("Passwords don't match!")
+        }
+
+        if (userRepository.findByEmbg(request.embg) != null) {
+            throw RuntimeException("User already exists!")
+        }
+
+        val user = AppUser(
+            embg = request.embg,
+            email = request.email,
+            firstName = request.firstName,
+            lastName = request.lastName,
+            passwordHash = encoder.encode(request.password),
+            createdAt = LocalDateTime.now(),//?
+            role = UserRole.PENDING//?
+        )
+
+        return userRepository.save(user)
+    }
+
+    fun login(request: LoginRequest): String {
+        val auth: Authentication = authenticationManager.authenticate(
+            UsernamePasswordAuthenticationToken(request.embg, request.password)
+        )
+
+        return if (auth.isAuthenticated) {
+            jwtService.generateToken(request.embg)
+        } else {
+            "Something went wrong"
+        }
+    }
+
+    fun getCurrentUser(): AppUser {
+        val authentication = SecurityContextHolder.getContext().authentication
+        val username = authentication.name
+        return userRepository.findByEmbg(username)
+            ?: throw UsernameNotFoundException("User Not Found")
+    }
+}

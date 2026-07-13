@@ -1,0 +1,55 @@
+:root {
+  --brand-color: #386641;
+  --brand-accent: #6a994e;
+  --brand-highlight: #a7c957;
+  --brand-light: #f8f9fa;
+  --brand-cream: #F2E8CF;
+  --brand-coral: #BC4749;
+  --error-color: #dc3545;
+  --training-dark: #386641;
+  --training-start: #6a994e;
+  --training-end: #a7c957;
+  --diet-end: #6a994e;
+  --supp-end: #fff3cd;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background-color: #f8f9fa;
+  color: #333;
+}
+
+#app {
+  min-height: 100vh;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.btn-signin {
+  background: linear-gradient(135deg, #386641, #6a994e);
+  color: #fff;
+  border: none;
+}
+
+.btn-signin:hover:not(:disabled) {
+  background: linear-gradient(135deg, #6a994e, #386641);
+}
+
+.btn-register {
+  background: linear-gradient(135deg, #386641, #6a994e);
+  color: #fff;
+  border: none;
+}
+
+.page-link {
+  cursor: pointer;
+}

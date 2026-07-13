@@ -1,0 +1,95 @@
+package finki.nvd.backend.service.impl
+
+import jakarta.persistence.EntityNotFoundException
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
+import org.springframework.stereotype.Service
+import finki.nvd.backend.components.MetricsFlagHelper
+import finki.nvd.backend.dto.AthleteReportFormDTO
+import finki.nvd.backend.dto.AthleteReportResponse
+import finki.nvd.backend.dto.AthleteReportShortDTO
+import finki.nvd.backend.dto.ReportMetricFlaggerDTO
+import finki.nvd.backend.mappers.toDto
+import finki.nvd.backend.model.enum.Gender
+import finki.nvd.backend.repository.AthleteReportRepository
+import finki.nvd.backend.repository.DoctorRepository
+import finki.nvd.backend.repository.PatientRepository
+import finki.nvd.backend.service.AthleteReportService
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.Period
+
+@Service
+class AthleteReportServiceImpl(
+    private val athleteReportRepository: AthleteReportRepository,
+    private val doctorRepository: DoctorRepository,
+    private val patientRepository: PatientRepository,
+    private val metricsFlagHelper: MetricsFlagHelper
+) : AthleteReportService {
+    override fun create(requestObject: AthleteReportFormDTO): Long {
+        val doctor = doctorRepository.findById(requestObject.doctorId)
+            .orElseThrow { EntityNotFoundException("Doctor with id = ${requestObject.doctorId} not found") }
+
+        val patient = patientRepository.findByUserEmbg(requestObject.embg)
+            ?: throw EntityNotFoundException("Patient with embg = ${requestObject.embg} not found")
+
+        if (patient.doctor == null) {
+            patient.doctor = doctor
+        }
+
+        patient.dateOfLatestCheckUp = LocalDateTime.now()
+        patientRepository.save(patient)
+
+        val report = AthleteReportFormDTO.toEntity(requestObject, doctor, patient)
+        return athleteReportRepository.save(report).reportId!!
+    }
+
+    override fun findReportById(id: Long): AthleteReportResponse =
+        athleteReportRepository.findById(id).map { it.toDto() }
+            .orElseThrow { EntityNotFoundException("AthleteReport with id $id not found") }
+
+    override fun reportMetricsFlagging(reportId: Long): ReportMetricFlaggerDTO {
+        val report = athleteReportRepository.findById(reportId)
+            .orElseThrow { EntityNotFoundException("Report with id = $reportId not found") }
+        val flagger = ReportMetricFlaggerDTO()
+        flagger.vo2Max = metricsFlagHelper.flagVo2Max(
+            report.vo2Max.toDouble(),
+            Period.between(report.patient.dateOfBirth, LocalDate.now()).years,
+            report.patient.gender == Gender.MALE
+        )
+        flagger.restingHeartRate = metricsFlagHelper.flagRestingHeartRate(report.restingHeartRate)
+        flagger.underPressureHeartRate = metricsFlagHelper.flagUnderPressureHeartRate(
+            report.underPressureHeartRate,
+            Period.between(report.patient.dateOfBirth, LocalDate.now()).years
+        )
+        flagger.leanMuscleMass = report.leanMuscleMass?.let {
+            metricsFlagHelper.flagLeanMass(report.weight, it)
+        }
+        flagger.bodyFatPercentage = metricsFlagHelper.flagBodyFat(report.bodyFatPercentage)
+        flagger.boneDensity = metricsFlagHelper.flagBoneDensity(report.boneDensity)
+        flagger.bmi = metricsFlagHelper.flagBMI(report.weight.toDouble(), report.height.toDouble())
+        flagger.hemoglobin = metricsFlagHelper.flagHemoglobin(report.hemoglobin, report.patient.gender == Gender.MALE)
+        flagger.glucose = metricsFlagHelper.flagGlucose(report.glucose)
+        flagger.vitaminD = metricsFlagHelper.flagVitaminD(report.vitaminD)
+        flagger.iron = metricsFlagHelper.flagIron(report.iron)
+        flagger.testosterone = metricsFlagHelper.flagTestosterone(report.testosterone)
+        flagger.cortisol = metricsFlagHelper.flagCortisol(report.cortisol)
+        return flagger
+    }
+
+    override fun getReportsShortByPatientId(patientId: Long, pageable: Pageable): Page<AthleteReportShortDTO> =
+        athleteReportRepository
+            .findByPatientPatientId(patientId, pageable)
+            .map { AthleteReportShortDTO.fromEntity(it) }
+
+    override fun getReportsShortByDoctorId(doctorId: Long, pageable: Pageable): Page<AthleteReportShortDTO> =
+        athleteReportRepository
+            .findByDoctorDoctorId(doctorId, pageable)
+            .map { AthleteReportShortDTO.fromEntity(it) }
+
+
+    override fun findLatestReportIdByPatientId(patientId: Long): Long =
+        athleteReportRepository.findTopByPatientPatientIdOrderByReportIdDesc(patientId)?.reportId
+            ?: throw EntityNotFoundException("No reports found.")
+
+}

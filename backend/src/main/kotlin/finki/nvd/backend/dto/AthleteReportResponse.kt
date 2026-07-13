@@ -1,0 +1,41 @@
+package finki.nvd.backend.dto
+
+import finki.nvd.backend.model.enum.AthleteReportStatus
+import java.math.BigDecimal
+import java.time.LocalDateTime
+
+data class AthleteReportResponse(
+    val reportId: Long?,
+    val doctor: String,
+    val doctorId: Long,
+    val patient: String,
+    val patientId: Long,
+    val embg: String,
+    val createdAt: LocalDateTime,
+    val status: AthleteReportStatus,
+    val vo2Max: BigDecimal,
+    val restingHeartRate: Int,
+    val underPressureHeartRate: Int,
+    val bodyFatPercentage: BigDecimal,
+    val leanMuscleMass: BigDecimal?,
+    val boneDensity: BigDecimal,
+    val height: BigDecimal,
+    val weight: BigDecimal,
+    val oneRepMaxBench: BigDecimal?,
+    val oneRepMaxSquat: BigDecimal?,
+    val oneRepMaxDeadlift: BigDecimal?,
+    val jumpHeight: BigDecimal?,
+    val averageRunPerKilometer: BigDecimal,
+    val shoulderFlexibility: Int?,
+    val hipFlexibility: Int?,
+    val balanceTime: BigDecimal,
+    val reactionTime: BigDecimal,
+    val coreStabilityScore: Int,
+    val hemoglobin: BigDecimal,
+    val glucose: BigDecimal,
+    val creatinine: BigDecimal,
+    val vitaminD: BigDecimal,
+    val iron: BigDecimal,
+    val testosterone: BigDecimal,
+    val cortisol: BigDecimal
+)
