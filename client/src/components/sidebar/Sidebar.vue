@@ -1,157 +1,419 @@
 <template>
-  <nav class="sidebar d-flex flex-column" :class="{ collapsed: isCollapsed }">
-    <div class="sidebar-header d-flex align-items-center justify-content-between px-3 py-3">
-      <span class="brand fw-bold fs-5" v-show="!isCollapsed">Athlete360</span>
-      <button class="btn btn-sm btn-link text-white p-0" @click="toggleCollapse">
-        <i class="bi" :class="isCollapsed ? 'bi-chevron-right' : 'bi-chevron-left'"></i>
-      </button>
-    </div>
-    <div class="sidebar-body flex-grow-1">
-      <ul class="nav flex-column">
-        <li class="nav-item" v-if="role === 'DOCTOR' || role === 'ADMIN'">
-          <router-link to="/doctor" class="nav-link" active-class="active" exact-active-class="active">
-            <i class="bi bi-person-badge me-2"></i>
-            <span v-show="!isCollapsed">Dashboard</span>
+  <div class="sidebar-container">
+    <router-link :to="role === 'PATIENT' ? '/patient' : '/doctor'" class="logo-section">
+      <svg class="athlete-logo" viewBox="0 0 100 100" aria-hidden="true">
+        <defs>
+          <linearGradient id="circleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#386641" />
+            <stop offset="25%" style="stop-color:#6A994E" />
+            <stop offset="50%" style="stop-color:#A7C957" />
+            <stop offset="75%" style="stop-color:#BC4749" />
+            <stop offset="100%" style="stop-color:#386641" />
+          </linearGradient>
+        </defs>
+
+        <circle cx="50" cy="50" r="48" fill="none" stroke="url(#circleGradient)" stroke-width="3" />
+
+        <circle cx="50" cy="50" r="42" fill="#F2E8CF" />
+
+        <circle cx="50" cy="28" r="8" fill="#386641" />
+
+        <rect x="45" y="36" width="10" height="18" rx="2" fill="#386641" />
+
+        <ellipse cx="38" cy="42" rx="3" ry="8" fill="#386641" transform="rotate(-20 38 42)" />
+        <ellipse cx="62" cy="42" rx="3" ry="8" fill="#386641" transform="rotate(20 62 42)" />
+
+        <ellipse cx="47" cy="65" rx="3" ry="12" fill="#386641" transform="rotate(-15 47 65)" />
+        <ellipse cx="53" cy="65" rx="3" ry="12" fill="#386641" transform="rotate(15 53 65)" />
+
+        <path d="M20 35 L35 30" stroke="#A7C957" stroke-width="2" stroke-linecap="round" opacity="0.6" />
+        <path d="M18 45 L33 40" stroke="#A7C957" stroke-width="2" stroke-linecap="round" opacity="0.6" />
+        <path d="M22 55 L35 50" stroke="#A7C957" stroke-width="2" stroke-linecap="round" opacity="0.6" />
+      </svg>
+
+      <span class="logo-text">Athlete360</span>
+    </router-link>
+    <hr class="sidebar-divider" />
+    <div class="nav-section">
+      <ul class="nav nav-pills flex-column mb-auto flex-grow-1">
+        <li class="nav-item">
+          <router-link :to="role === 'PATIENT' ? '/patient' : '/doctor'" active-class="active" exact-active-class="active"
+             class="nav-link" aria-current="page">
+            <svg class="nav-icon" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+              <path
+                d="M8.354 1.146a.5.5 0 0 0-.708 0l-6 6A.5.5 0 0 0 1.5 7.5v7a.5.5 0 0 0 .5.5h4.5a.5.5 0 0 0 .5-.5v-4h2v4a.5.5 0 0 0 .5.5H14a.5.5 0 0 0 .5-.5v-7a.5.5 0 0 0-.146-.354L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293L8.354 1.146zM2.5 14V7.707l5.5-5.5 5.5 5.5V14H10v-4a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5v4H2.5z" />
+            </svg>
+            Home
           </router-link>
         </li>
         <li class="nav-item" v-if="role === 'PATIENT'">
-          <router-link to="/patient" class="nav-link" active-class="active" exact-active-class="active">
-            <i class="bi bi-person me-2"></i>
-            <span v-show="!isCollapsed">My Profile</span>
+          <router-link :to="`/moods/${loggedUser?.personId}/search`" active-class="active" exact-active-class="active"
+             class="nav-link" aria-current="page">
+            <svg class="nav-icon" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+              <path
+                d="M4.285 9.567a.5.5 0 0 1 .683.183A3.498 3.498 0 0 0 8 11.5a3.498 3.498 0 0 0 3.032-1.75.5.5 0 1 1 .866.5A4.498 4.498 0 0 1 8 12.5a4.498 4.498 0 0 1-3.898-2.25.5.5 0 0 1 .183-.683zM7 6.5C7 7.328 6.552 8 6 8s-1-.672-1-1.5S5.448 5 6 5s1 .672 1 1.5zm4 0c0 .828-.448 1.5-1 1.5s-1-.672-1-1.5S9.448 5 10 5s1 .672 1 1.5z" />
+            </svg>
+            Moods
           </router-link>
         </li>
-        <li class="nav-item" v-if="role === 'PATIENT'">
-          <router-link to="/moods" class="nav-link" active-class="active" exact-active-class="active">
-            <i class="bi bi-emoji-smile me-2"></i>
-            <span v-show="!isCollapsed">Moods</span>
-          </router-link>
-        </li>
-        <li class="nav-item" v-if="role === 'DOCTOR' || role === 'PATIENT' || role === 'ADMIN'">
-          <router-link to="/reports" class="nav-link" active-class="active" exact-active-class="active">
-            <i class="bi bi-file-earmark-medical me-2"></i>
-            <span v-show="!isCollapsed">Reports</span>
-          </router-link>
-        </li>
-        <li class="nav-item" v-if="role === 'DOCTOR'">
-          <router-link to="/reports/new" class="nav-link" active-class="active" exact-active-class="active">
-            <i class="bi bi-plus-circle me-2"></i>
-            <span v-show="!isCollapsed">New Report</span>
+        <li class="nav-item">
+          <router-link to="/reports" active-class="active" exact-active-class="active" class="nav-link" aria-current="page">
+            <svg class="nav-icon" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+              <path
+                d="M1 2.828c.885-.37 2.154-.769 3.388-.893 1.33-.134 2.458.063 3.112.752v9.746c-.935-.53-2.12-.603-3.213-.493-1.18.12-2.37.461-3.287.811V2.828zm7.5-.141c.654-.689 1.782-.886 3.112-.752 1.234.124 2.503.523 3.388.893v9.923c-.918-.35-2.107-.692-3.287-.81-1.094-.111-2.278-.039-3.213.492V2.687zM8 1.783C7.015.936 5.587.81 4.287.94c-1.514.153-3.042.672-3.994 1.105A.5.5 0 0 0 0 2.5v11a.5.5 0 0 0 .707.455c.882-.4 2.303-.881 3.68-1.02 1.409-.142 2.59.087 3.223.877a.5.5 0 0 0 .78 0c.633-.79 1.814-1.019 3.222-.877 1.378.139 2.8.62 3.681 1.02A.5.5 0 0 0 16 13.5v-11a.5.5 0 0 0-.293-.455c-.952-.433-2.48-.952-3.994-1.105C10.413.809 8.985.936 8 1.783z" />
+            </svg>
+            Reports
           </router-link>
         </li>
       </ul>
     </div>
-    <div class="sidebar-footer px-3 py-3 border-top">
-      <div class="user-info d-flex align-items-center mb-2" v-show="!isCollapsed">
-        <div class="avatar-circle me-2 d-flex align-items-center justify-content-center">
-          {{ userInitials }}
-        </div>
-        <div>
-          <div class="fw-semibold small">{{ currentUser?.firstName }} {{ currentUser?.lastName }}</div>
-          <div class="text-muted small">{{ role }}</div>
-        </div>
+
+    <hr class="sidebar-divider" />
+
+    <div class="profile-section">
+      <div class="profile-dropdown dropdown">
+        <a href="#" class="profile-toggle dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"
+           @click.prevent>
+          <div class="profile-avatar-container">
+            <div class="default-avatar">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+              </svg>
+            </div>
+          </div>
+          <div class="profile-info">
+            <div class="profile-role">
+              {{ loggedUser?.role?.toString() === 'DOCTOR' ? 'Doctor' : 'Patient' }}
+            </div>
+            <div class="profile-name">
+              {{ loggedUser?.firstName }} {{ loggedUser?.lastName }}
+            </div>
+          </div>
+        </a>
+        <ul class="dropdown-menu shadow">
+          <li>
+            <hr class="dropdown-divider" />
+          </li>
+          <li>
+            <a class="dropdown-item" @click="onLogout">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 8px;">
+                <path fill-rule="evenodd"
+                      d="M6 12.5a.5.5 0 0 0 .5.5h8a.5.5 0 0 0 .5-.5v-9a.5.5 0 0 0-.5-.5h-8a.5.5 0 0 0-.5.5v2a.5.5 0 0 1-1 0v-2A1.5 1.5 0 0 1 6.5 2h8A1.5 1.5 0 0 1 16 3.5v9a1.5 1.5 0 0 1-1.5 1.5h-8A1.5 1.5 0 0 1 5 12.5v-2a.5.5 0 0 1 1 0v2z" />
+                <path fill-rule="evenodd"
+                      d="M.146 8.354a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L1.707 7.5H10.5a.5.5 0 0 1 0 1H1.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3z" />
+              </svg>
+              Sign out
+            </a>
+          </li>
+        </ul>
       </div>
-      <button class="btn btn-sm btn-outline-light w-100" @click="handleLogout">
-        <i class="bi bi-box-arrow-left me-1"></i>
-        <span v-show="!isCollapsed">Logout</span>
-      </button>
     </div>
-  </nav>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../../composables/useAuth'
 
-const props = defineProps<{
+defineProps<{
   role?: string
 }>()
 
 const router = useRouter()
 const { logout, getCurrentUser } = useAuth()
-const isCollapsed = ref(false)
+const loggedUser = getCurrentUser()
 
-const currentUser = computed(() => getCurrentUser())
-const userInitials = computed(() => {
-  const user = getCurrentUser()
-  if (!user) return ''
-  return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase()
-})
-
-function toggleCollapse() {
-  isCollapsed.value = !isCollapsed.value
-}
-
-function handleLogout() {
+function onLogout() {
   logout()
   router.push('/login')
 }
 </script>
 
 <style scoped>
-.sidebar {
-  width: 250px;
-  min-height: 100vh;
-  background: linear-gradient(180deg, #386641, #2c5034);
-  color: #fff;
-  transition: width 0.3s ease;
-  position: sticky;
-  top: 0;
+:root {
+  --color-dark-green: #386641;
+  --color-medium-green: #6A994E;
+  --color-light-green: #A7C957;
+  --color-cream: #F2E8CF;
+  --color-coral: #BC4749;
+}
+
+.sidebar-container {
+  width: 280px;
+  background: linear-gradient(180deg, var(--color-dark-green) 0%, var(--color-medium-green) 100%);
+  padding: 1.5rem;
   height: 100vh;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  margin-bottom: 2rem;
+  text-decoration: none;
+  color: var(--color-cream);
+  transition: opacity 0.2s ease;
+}
+
+.logo-section:hover {
+  opacity: 0.9;
+  color: var(--color-cream);
+  text-decoration: none;
+}
+
+.logo-text {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-left: 0.75rem;
+  letter-spacing: -0.5px;
+}
+
+.athlete-logo {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+}
+
+.sidebar-divider {
+  border: none;
+  height: 1px;
+  background: rgba(242, 232, 207, 0.3);
+  margin: 0 0 1.5rem 0;
+}
+
+.nav-section {
+  flex-grow: 1;
+  margin-bottom: 1.5rem;
+}
+
+.nav-pills {
+  --bs-nav-pills-border-radius: 8px;
+  gap: 0.5rem;
+}
+
+.nav-pills .nav-link {
+  color: var(--color-cream);
+  background: transparent;
+  border: none;
+  padding: 0.875rem 1rem;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  position: relative;
   overflow: hidden;
 }
 
-.sidebar.collapsed {
-  width: 70px;
+.nav-pills .nav-link:hover {
+  background: rgba(242, 232, 207, 0.15);
+  color: var(--color-cream);
+  transform: translateX(2px);
 }
 
-.sidebar-header {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.brand {
-  color: #F2E8CF;
-}
-
-.sidebar-body .nav-link {
-  color: rgba(255, 255, 255, 0.85);
-  padding: 12px 16px;
-  border-radius: 8px;
-  margin: 2px 8px;
-  transition: all 0.2s ease;
-}
-
-.sidebar-body .nav-link:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
-}
-
-.sidebar-body .nav-link.active {
-  background: rgba(255, 255, 255, 0.2);
-  color: #fff;
+.nav-pills .nav-link.active,
+.nav-pills .nav-link:focus {
+  background: var(--color-cream);
+  color: var(--color-dark-green);
   font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-.sidebar-body .nav-link i {
-  font-size: 1.1rem;
+.nav-icon {
+  width: 18px;
+  height: 18px;
+  margin-right: 0.75rem;
+  opacity: 0.9;
 }
 
-.avatar-circle {
-  width: 36px;
-  height: 36px;
+.profile-section {
+  margin-top: auto;
+}
+
+.profile-dropdown {
+  position: relative;
+}
+
+.profile-toggle {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  background: rgba(242, 232, 207, 0.1);
+  border: 1px solid rgba(242, 232, 207, 0.2);
+  border-radius: 12px;
+  text-decoration: none;
+  color: var(--color-cream);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.profile-toggle::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(242, 232, 207, 0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.profile-toggle:hover::before {
+  left: 100%;
+}
+
+.profile-toggle:hover {
+  background: rgba(242, 232, 207, 0.2);
+  color: var(--color-cream);
+  text-decoration: none;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.profile-avatar-container {
+  width: 40px;
+  height: 40px;
+  margin-right: 1rem;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.profile-avatar {
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
-  font-size: 0.85rem;
+  border: 2px solid var(--color-cream);
+  object-fit: cover;
+  background: var(--color-cream);
+}
+
+.default-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: var(--color-cream);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--color-cream);
+  position: relative;
+}
+
+.default-avatar svg {
+  width: 24px;
+  height: 24px;
+  fill: var(--color-dark-green);
+}
+
+.profile-info {
+  flex-grow: 1;
+  min-width: 0;
+}
+
+.profile-role {
+  font-size: 0.75rem;
+  opacity: 0.8;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.profile-name {
   font-weight: 600;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
 }
 
-.sidebar-footer .btn-outline-light {
-  border-color: rgba(255, 255, 255, 0.3);
-  color: #fff;
+.dropdown-arrow {
+  width: 16px;
+  height: 16px;
+  opacity: 0.7;
+  transition: transform 0.3s ease;
+  flex-shrink: 0;
+  margin-left: 0.5rem;
 }
 
-.sidebar-footer .btn-outline-light:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.5);
+.profile-toggle[aria-expanded="true"] .dropdown-arrow {
+  transform: rotate(180deg);
+}
+
+.dropdown-menu {
+  background: var(--color-cream);
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  margin-top: 0.75rem;
+  min-width: 220px;
+  padding: 0.75rem 0;
+  backdrop-filter: blur(10px);
+}
+
+.dropdown-item {
+  color: var(--color-dark-green);
+  padding: 0.875rem 1.5rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  border: none;
+  background: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  text-align: left;
+  position: relative;
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+  background: var(--color-coral);
+  color: var(--color-cream);
+  transform: translateX(4px);
+}
+
+.dropdown-item:hover::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--color-cream);
+}
+
+.dropdown-divider {
+  border-color: rgba(56, 102, 65, 0.2);
+  margin: 0.5rem 1rem;
+}
+
+@media (max-width: 768px) {
+  .sidebar-container {
+    width: 100%;
+    height: auto;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+  }
+
+  .logo-text {
+    font-size: 1.25rem;
+  }
+
+  .athlete-logo {
+    width: 40px;
+    height: 40px;
+  }
 }
 </style>

@@ -29,7 +29,7 @@ export const reportService = {
     params.set('page', page.toString())
     params.set('size', size.toString())
     params.set('sort', sort)
-    return apiClient.get<Page<ReportShort>>(`${URL}/patient/${patientId}`, { params })
+    return apiClient.get<Page<ReportShort>>(`/api/patient/${patientId}/reports`, { params })
   },
 
   getReportsByDoctorId(doctorId: number, page = 0, size = 10, sort = 'createdAt,desc') {
@@ -37,6 +37,6 @@ export const reportService = {
     params.set('page', page.toString())
     params.set('size', size.toString())
     params.set('sort', sort)
-    return apiClient.get<Page<ReportShort>>(`${URL}/doctor/${doctorId}`, { params })
+    return apiClient.get<Page<ReportShort>>(`/api/doctor/${doctorId}/reports`, { params })
   }
 }

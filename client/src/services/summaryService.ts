@@ -17,6 +17,6 @@ export const summaryService = {
   },
 
   getSummaryByReportId(reportId: number) {
-    return apiClient.get<Summary>(`${URL}/${reportId}`)
+    return apiClient.get<Summary>(`/api/reports/${reportId}/summary`)
   }
 }

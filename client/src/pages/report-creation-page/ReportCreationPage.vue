@@ -8,62 +8,37 @@
 
     <form @submit.prevent="onSubmit">
       <!-- EMBG Autocomplete -->
-      <div class="mb-3">
+      <div class="col-md-4 position-relative mb-3">
         <label for="embg" class="form-label">Patient EMBG</label>
-        <div class="position-relative">
-          <input
-            id="embg"
-            v-model="form.embg"
-            type="text"
-            class="form-control"
-            placeholder="Enter EMBG to search..."
-            @input="onEmbgInput"
-            @focus="showDropdown = true"
-            @blur="hideDropdownDelayed"
-            autocomplete="off"
-          />
-          <ul v-if="showDropdown && embgResults.length > 0" class="dropdown-menu show w-100" @mousedown.prevent>
-            <li
-              v-for="patient in embgResults"
-              :key="patient.patientId"
-            >
-              <a
-                class="dropdown-item"
-                href="#"
-                @click.prevent="selectPatient(patient)"
-              >
-                {{ patient.name }} ({{ patient.gender }}, {{ patient.sportsmanCategory }})
-              </a>
-            </li>
-          </ul>
+        <input
+          id="embg"
+          v-model="form.embg"
+          type="text"
+          class="form-control"
+          @input="onEmbgInput"
+          @blur="hideDropdownDelayed"
+          autocomplete="off"
+        />
+        <div class="patient-type-search d-flex justify-content-start gap-3">
+          <div>
+            <input type="radio" id="new-patient" name="patientType" :value="true" v-model="patientType" />
+            <label for="new-patient">New patients</label>
+          </div>
+          <div>
+            <input type="radio" id="assigned-patient" name="patientType" :value="false" v-model="patientType" />
+            <label for="assigned-patient">Assigned patients</label>
+          </div>
         </div>
-      </div>
-
-      <!-- Patient Type -->
-      <div class="mb-3">
-        <label class="form-label d-block">Patient Type</label>
-        <div class="form-check form-check-inline">
-          <input
-            id="patientTypeNew"
-            v-model="patientType"
-            type="radio"
-            class="form-check-input"
-            name="patientType"
-            :value="true"
-          />
-          <label for="patientTypeNew" class="form-check-label">New patients</label>
-        </div>
-        <div class="form-check form-check-inline">
-          <input
-            id="patientTypeAssigned"
-            v-model="patientType"
-            type="radio"
-            class="form-check-input"
-            name="patientType"
-            :value="false"
-          />
-          <label for="patientTypeAssigned" class="form-check-label">Assigned patients</label>
-        </div>
+        <ul v-if="showDropdown && embgResults.length > 0" class="list-group position-absolute w-100" style="z-index: 1000; max-height: 200px; overflow-y: auto;">
+          <li
+            v-for="patient in embgResults"
+            :key="patient.patientId"
+            class="list-group-item list-group-item-action"
+            @mousedown="selectPatient(patient)"
+          >
+            {{ patient.embg }} - {{ patient.name }}
+          </li>
+        </ul>
       </div>
 
       <!-- Status -->
@@ -171,7 +146,7 @@ const form = ref<ReportForm>({
 
 // Field definitions
 const fields = [
-  { name: 'vo2Max' as const, label: 'VO2 Max', type: 'number', step: 0.01, required: true, min: 0, max: 100 },
+  { name: 'vo2Max' as const, label: 'VO₂ Max', type: 'number', step: 0.01, required: true, min: 0, max: 100 },
   { name: 'restingHeartRate' as const, label: 'Resting Heart Rate', type: 'number', step: 1, required: true, min: 20, max: 250 },
   { name: 'underPressureHeartRate' as const, label: 'Under Pressure Heart Rate', type: 'number', step: 1, required: true, min: 50, max: 250 },
   { name: 'bodyFatPercentage' as const, label: 'Body Fat %', type: 'number', step: 0.1, required: true, min: 0, max: 100 },
@@ -299,8 +274,52 @@ onMounted(async () => {
   max-width: 900px;
 }
 
-.dropdown-menu {
-  max-height: 200px;
-  overflow-y: auto;
+.list-group-item {
+  cursor: pointer;
+}
+
+.list-group-item:hover {
+  background-color: #f8f9fa;
+}
+
+.patient-type-search > div {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  padding: 4px 10px;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background-color: #ffffff;
+}
+
+.patient-type-search > div:has(input[type="radio"]:checked) {
+  border-color: #208b57;
+  background-color: #e9ffe7;
+}
+
+.patient-type-search input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  margin-right: 8px;
+  accent-color: #0b9d05;
+}
+
+.patient-type-search label {
+  cursor: pointer;
+  font-weight: 500;
+  margin: 0;
+  user-select: none;
+}
+
+.patient-type-search > div:has(input[type="radio"]:checked) label {
+  color: #0b9d05;
+  font-weight: 600;
+}
+
+.patient-type-search > div:active {
+  transform: scale(0.98);
+  transition: transform 0.1s ease;
 }
 </style>

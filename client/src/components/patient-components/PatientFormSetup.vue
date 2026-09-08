@@ -24,7 +24,6 @@
             id="category"
             v-model="selectedCategory"
             class="form-select border-2"
-            :class="{ 'is-invalid': categoryInvalid }"
           >
             <option :value="null">Select category</option>
             <option

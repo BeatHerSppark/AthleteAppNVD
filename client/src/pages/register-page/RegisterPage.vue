@@ -11,12 +11,12 @@
               <div class="row g-3">
                 <div class="col-md-6">
                   <label class="form-label">First name</label>
-                  <input type="text" class="form-control" :class="{ 'is-invalid': touched.firstName && errors.firstName }" v-model="form.firstName" />
+                  <input type="text" class="form-control" :class="{ 'is-invalid': touched.firstName && errors.firstName }" v-model="form.firstName" @blur="touched.firstName = true" />
                   <div class="invalid-feedback" v-if="touched.firstName && errors.firstName">First name is required.</div>
                 </div>
                 <div class="col-md-6">
                   <label class="form-label">Last name</label>
-                  <input type="text" class="form-control" :class="{ 'is-invalid': touched.lastName && errors.lastName }" v-model="form.lastName" />
+                  <input type="text" class="form-control" :class="{ 'is-invalid': touched.lastName && errors.lastName }" v-model="form.lastName" @blur="touched.lastName = true" />
                   <div class="invalid-feedback" v-if="touched.lastName && errors.lastName">Last name is required.</div>
                 </div>
               </div>
@@ -24,18 +24,18 @@
               <div class="row g-3 mt-1">
                 <div class="col-md-6">
                   <label class="form-label">EMBG</label>
-                  <input type="text" inputmode="numeric" class="form-control" :class="{ 'is-invalid': touched.embg && errors.embg }" v-model="form.embg" placeholder="e.g. 1007991450xxx" />
+                  <input type="text" inputmode="numeric" class="form-control" :class="{ 'is-invalid': touched.embg && errors.embg }" v-model="form.embg" placeholder="e.g. 1007991450xxx" @blur="touched.embg = true" />
                   <div class="invalid-feedback" v-if="touched.embg && errors.embg">{{ errors.embg }}</div>
                   <div class="form-text">Format: ddmmyyy + 450xxx (male) / 455xxx (female)</div>
                 </div>
                 <div class="col-md-3">
                   <label class="form-label">Date of birth</label>
-                  <input type="date" class="form-control" :class="{ 'is-invalid': touched.dateOfBirth && errors.dateOfBirth }" v-model="form.dateOfBirth" />
+                  <input type="date" class="form-control" :class="{ 'is-invalid': touched.dateOfBirth && errors.dateOfBirth }" v-model="form.dateOfBirth" @blur="touched.dateOfBirth = true" />
                   <div class="invalid-feedback" v-if="touched.dateOfBirth && errors.dateOfBirth">Date of birth is required.</div>
                 </div>
                 <div class="col-md-3">
                   <label class="form-label">Gender</label>
-                  <select class="form-select" :class="{ 'is-invalid': touched.gender && errors.gender }" v-model="form.gender">
+                  <select class="form-select" :class="{ 'is-invalid': touched.gender && errors.gender }" v-model="form.gender" @blur="touched.gender = true">
                     <option value="" disabled>Select...</option>
                     <option value="MALE">MALE</option>
                     <option value="FEMALE">FEMALE</option>
@@ -46,7 +46,7 @@
 
               <div class="mt-3">
                 <label class="form-label">Email</label>
-                <input type="email" class="form-control" :class="{ 'is-invalid': touched.email && errors.email }" v-model="form.email" placeholder="name@example.com" />
+                <input type="email" class="form-control" :class="{ 'is-invalid': touched.email && errors.email }" v-model="form.email" placeholder="name@example.com" @blur="touched.email = true" />
                 <div class="invalid-feedback" v-if="touched.email && errors.email">
                   {{ errors.email === 'required' ? 'Email is required.' : 'Please enter a valid email.' }}
                 </div>
@@ -55,7 +55,7 @@
               <div class="row g-3 mt-1">
                 <div class="col-md-6">
                   <label class="form-label">Password</label>
-                  <input :type="showPass ? 'text' : 'password'" class="form-control" :class="{ 'is-invalid': touched.password && errors.password }" v-model="form.password" placeholder="min 8 chars, 1 number, 1 symbol, no uppercase" />
+                  <input :type="showPass ? 'text' : 'password'" class="form-control" :class="{ 'is-invalid': touched.password && errors.password }" v-model="form.password" placeholder="min 8 chars, 1 number, 1 symbol, no uppercase" @blur="touched.password = true" />
                   <div class="invalid-feedback" v-if="touched.password && errors.password">
                     <template v-if="errors.password === 'required'">Password is required.</template>
                     <template v-if="errors.password === 'minlength'">Min length is 8.</template>
@@ -68,7 +68,7 @@
                 </div>
                 <div class="col-md-6">
                   <label class="form-label">Confirm password</label>
-                  <input :type="showPass ? 'text' : 'password'" class="form-control" :class="{ 'is-invalid': touched.confirmPassword && errors.confirmPassword }" v-model="form.confirmPassword" />
+                  <input :type="showPass ? 'text' : 'password'" class="form-control" :class="{ 'is-invalid': touched.confirmPassword && errors.confirmPassword }" v-model="form.confirmPassword" @blur="touched.confirmPassword = true" />
                   <div class="invalid-feedback" v-if="touched.confirmPassword && errors.confirmPassword">
                     <template v-if="errors.confirmPassword === 'required'">Confirmation is required.</template>
                     <template v-if="errors.confirmPassword === 'mismatch'">Passwords do not match.</template>

@@ -36,7 +36,7 @@
         </div>
 
         <div class="col-md-4">
-          <label class="form-label">Cost / month (EUR)</label>
+          <label class="form-label">Cost / month (€)</label>
           <input type="number" class="form-control" v-model.number="form.costPerMonth" min="0" step="1" />
         </div>
 
@@ -56,9 +56,9 @@
         </div>
 
         <div class="col-md-6">
-          <label class="form-label">Effectiveness (0--10)</label>
+          <label class="form-label">Effectiveness (0–10)</label>
           <input type="number" class="form-control" v-model.number="form.effectivenessRating" min="0" max="10" step="1" />
-          <div class="form-text">Estimate how effective this recommendation is on a 0--10 scale.</div>
+          <div class="form-text">Estimate how effective this recommendation is on a 0–10 scale.</div>
         </div>
 
         <div class="col-md-6">

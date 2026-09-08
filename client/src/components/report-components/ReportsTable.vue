@@ -1,149 +1,129 @@
 <template>
-  <div class="reports-table-container">
-    <div v-if="loading" class="text-center py-5">
-      <div class="spinner-border text-success" role="status">
-        <span class="visually-hidden">Loading...</span>
-      </div>
-      <p class="mt-2 text-muted">Loading reports...</p>
-    </div>
-
-    <div v-else-if="error" class="alert alert-danger" role="alert">
-      {{ error }}
-    </div>
-
-    <div v-else>
-      <table class="table table-hover table-striped table-bordered align-middle">
-        <thead class="table-dark">
+  <div v-if="reports.length === 0" class="empty-placeholder text-center p-5">
+    <div class="fw-medium text-muted">No reports available</div>
+  </div>
+  <div v-else>
+    <div class="table-responsive mt-3">
+      <table class="table w-100 table-hover">
+        <thead>
           <tr>
-            <th scope="col">Created At</th>
-            <th v-if="!id" scope="col">{{ userRole === 'DOCTOR' ? 'Patient' : 'Doctor' }}</th>
+            <th scope="col">Patient</th>
+            <th scope="col">Doctor</th>
             <th scope="col">Status</th>
-            <th scope="col">VO2 Max</th>
-            <th scope="col">Actions</th>
+            <th scope="col">
+              Date
+              <button
+                type="button"
+                class="btn btn-sm btn-link p-0 ms-2"
+                @click="toggleSortByCreatedAt"
+                aria-label="Sort by name"
+                title="Sort by name"
+              >
+                <span v-if="sortDirection === 'asc' && sortField === 'createdAt'">&#9650;</span>
+                <span v-else-if="sortDirection === 'desc' && sortField === 'createdAt'">&#9660;</span>
+                <span v-else>&#8645;</span>
+              </button>
+            </th>
+            <th scope="col">VO2 max</th>
+            <th scope="col"></th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="report in reports" :key="report.id">
+            <td>{{ report.patientName }}</td>
+            <td>{{ report.doctorName }}</td>
+            <td><StatusPill :status="report.status" /></td>
             <td>{{ formatDate(report.createdAt) }}</td>
-            <td v-if="!id">
-              {{ userRole === 'DOCTOR' ? report.patientName : report.doctorName }}
-            </td>
+            <td>{{ report.vo2Max }}</td>
             <td>
-              <StatusPill :status="report.status" />
-            </td>
-            <td>{{ report.vo2Max.toFixed(2) }}</td>
-            <td>
-              <router-link
-                :to="`/reports/${report.id}`"
-                class="btn btn-sm btn-outline-primary"
-              >
-                View
+              <router-link :to="`/reports/${report.id}`" class="btn btn-outline-secondary btn-sm">
+                Details
               </router-link>
-            </td>
-          </tr>
-          <tr v-if="reports.length === 0">
-            <td :colspan="!id ? 5 : 4" class="text-center text-muted">
-              No reports found.
             </td>
           </tr>
         </tbody>
       </table>
-
-      <!-- Pagination -->
-      <nav v-if="totalPages > 1" aria-label="Reports pagination">
-        <ul class="pagination justify-content-center">
-          <li class="page-item" :class="{ disabled: currentPage === 0 }">
-            <button class="page-link" @click="changePage(currentPage - 1)">Previous</button>
-          </li>
-          <li
-            v-for="page in totalPages"
-            :key="page"
-            class="page-item"
-            :class="{ active: page - 1 === currentPage }"
-          >
-            <button class="page-link" @click="changePage(page - 1)">{{ page }}</button>
-          </li>
-          <li class="page-item" :class="{ disabled: currentPage >= totalPages - 1 }">
-            <button class="page-link" @click="changePage(currentPage + 1)">Next</button>
-          </li>
-        </ul>
-      </nav>
     </div>
+
+    <ul v-if="totalElements > size" class="pagination">
+      <li class="page-item" :class="{ disabled: page === 0 }">
+        <button class="page-link" @click="onPageChange(page - 1)">Previous</button>
+      </li>
+      <li class="page-item" :class="{ disabled: (page + 1) * size >= totalElements }">
+        <button class="page-link" @click="onPageChange(page + 1)">Next</button>
+      </li>
+    </ul>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { reportService } from '../../services/reportService'
 import { useAuth } from '../../composables/useAuth'
 import StatusPill from '../status-pill/StatusPill.vue'
 import type { ReportShort } from '../../types'
 
 const props = defineProps<{
-  id?: number
+  id?: number | null
 }>()
 
 const { getCurrentUser } = useAuth()
+
 const reports = ref<ReportShort[]>([])
-const loading = ref(true)
-const error = ref<string | null>(null)
-const currentPage = ref(0)
-const totalPages = ref(1)
-const pageSize = 10
+const totalElements = ref(0)
+const page = ref(0)
+const size = ref(10)
 
-const userRole = computed(() => getCurrentUser()?.role ?? null)
+const sortField = ref('createdAt')
+const sortDirection = ref<'asc' | 'desc'>('desc')
 
-async function loadReports(page = 0) {
-  loading.value = true
-  error.value = null
-  try {
-    let response
-    if (props.id !== undefined) {
-      response = await reportService.getReportsByPatientId(props.id, page, pageSize)
-    } else {
-      const user = getCurrentUser()
-      const personId = user?.personId
-      if (!personId) {
-        error.value = 'Unable to determine user ID.'
-        loading.value = false
-        return
-      }
-      if (user?.role === 'DOCTOR') {
-        response = await reportService.getReportsByDoctorId(personId, page, pageSize)
-      } else {
-        response = await reportService.getReportsByPatientId(personId, page, pageSize)
-      }
-    }
-    reports.value = response.data.content
-    totalPages.value = response.data.totalPages
-    currentPage.value = response.data.number
-  } catch (e: any) {
-    error.value = e.response?.data?.message || 'Failed to load reports.'
-  } finally {
-    loading.value = false
+async function loadReports(targetPage: number = page.value) {
+  const sortParam = `${sortField.value},${sortDirection.value}`
+  let response
+  if (props.id != null) {
+    response = await reportService.getReportsByPatientId(props.id, targetPage, size.value, sortParam)
+  } else {
+    const user = getCurrentUser()
+    const personId = user?.personId
+    if (!personId) return
+    response = user?.role === 'DOCTOR'
+      ? await reportService.getReportsByDoctorId(personId, targetPage, size.value, sortParam)
+      : await reportService.getReportsByPatientId(personId, targetPage, size.value, sortParam)
   }
+  reports.value = response.data.content
+  totalElements.value = response.data.totalElements
+  page.value = response.data.number
 }
 
-function changePage(page: number) {
-  if (page < 0 || page >= totalPages.value) return
-  loadReports(page)
+function onPageChange(newPage: number) {
+  loadReports(newPage)
+}
+
+function toggleSortByCreatedAt() {
+  if (sortField.value === 'createdAt') {
+    sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc'
+  } else {
+    sortField.value = 'createdAt'
+    sortDirection.value = 'asc'
+  }
+  loadReports(0)
 }
 
 function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
+  const d = new Date(dateStr)
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) +
+    ', ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
 }
 
-onMounted(() => loadReports(0))
+onMounted(() => loadReports())
 </script>
 
 <style scoped>
-.reports-table-container {
-  padding: 1rem 0;
+.empty-placeholder {
+  border: 2px dashed #d1d5db;
+  border-radius: 16px;
+  background: #f9fafb;
+  color: #6b7280;
+  font-size: 1rem;
 }
 </style>

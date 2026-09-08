@@ -90,12 +90,7 @@
             </div>
           </div>
           <div v-if="view === 'pie'" class="chart-wrapper">
-            <div class="simple-pie-chart">
-              <div v-for="(entry, i) in progressPieData" :key="i" class="pie-segment"
-                :style="{ backgroundColor: entry.color, flex: entry.value || 1 }">
-                <span class="pie-label">{{ entry.name }}: {{ entry.value }}</span>
-              </div>
-            </div>
+            <PieChart :data="progressPieData" />
           </div>
         </div>
 
@@ -110,12 +105,7 @@
             </div>
           </div>
           <div v-if="view === 'pie'" class="chart-wrapper">
-            <div class="simple-pie-chart">
-              <div v-for="(entry, i) in emotionPieData" :key="i" class="pie-segment"
-                :style="{ backgroundColor: entry.color, flex: entry.value || 1 }">
-                <span class="pie-label">{{ entry.name }}: {{ entry.value }}</span>
-              </div>
-            </div>
+            <PieGrid :data="emotionPieData" />
           </div>
         </div>
 
@@ -133,6 +123,8 @@ import { moodService } from '../../services/moodService'
 import { useAuth } from '../../composables/useAuth'
 import type { Patient, MoodStatistics } from '../../types'
 import LineChartComponent from './LineChartComponent.vue'
+import PieChart from './PieChart.vue'
+import PieGrid from './PieGrid.vue'
 
 const route = useRoute()
 const auth = useAuth()
@@ -140,39 +132,42 @@ const patient = ref<Patient>()
 const moodStatistics = ref<MoodStatistics>()
 const view = ref<'pie' | 'table'>('pie')
 
+// Matches Angular's colorSchema.domain = ['#6A994E', '#F2E8CF', '#BC4749', '#386641', '#A7C957']
+const colorDomain = ['#6A994E', '#F2E8CF', '#BC4749', '#386641', '#A7C957']
+
 const progressPieData = computed(() => {
   if (!moodStatistics.value) return []
   return [
-    { name: 'Good', value: moodStatistics.value.moodProgressCounts['GOOD'] ?? 0, color: '#37b24d' },
-    { name: 'Stall', value: moodStatistics.value.moodProgressCounts['STALL'] ?? 0, color: '#339af0' },
-    { name: 'Bad', value: moodStatistics.value.moodProgressCounts['BAD'] ?? 0, color: '#ee5a52' }
+    { name: 'Good', value: moodStatistics.value.moodProgressCounts['GOOD'] ?? 0, color: colorDomain[0] },
+    { name: 'Stall', value: moodStatistics.value.moodProgressCounts['STALL'] ?? 0, color: colorDomain[1] },
+    { name: 'Bad', value: moodStatistics.value.moodProgressCounts['BAD'] ?? 0, color: colorDomain[2] }
   ]
 })
 
+// Matches Angular's advancedPieChartData order (Tired is intentionally omitted, same as source app)
 const emotionPieData = computed(() => {
   if (!moodStatistics.value) return []
-  const colors: Record<string, string> = {
-    HAPPY: '#51cf66', EXCITED: '#ffd43b', NEUTRAL: '#868e96',
-    TIRED: '#7986cb', STRESSED: '#ef4444', SAD: '#2563eb'
-  }
-  return Object.entries(moodStatistics.value.moodEmotionCounts).map(([name, value]) => ({
-    name, value, color: colors[name] || '#868e96'
-  }))
+  const counts = moodStatistics.value.moodEmotionCounts
+  return [
+    { name: 'Happy', value: counts['HAPPY'] ?? 0, color: colorDomain[0] },
+    { name: 'Excited', value: counts['EXCITED'] ?? 0, color: colorDomain[1] },
+    { name: 'Neutral', value: counts['NEUTRAL'] ?? 0, color: colorDomain[2] },
+    { name: 'Sad', value: counts['SAD'] ?? 0, color: colorDomain[3] },
+    { name: 'Stressed', value: counts['STRESSED'] ?? 0, color: colorDomain[4] }
+  ]
 })
 
+// Matches Angular's table view list (Sad is intentionally omitted, same as source app)
 const emotionData = computed(() => {
   if (!moodStatistics.value) return []
-  const icons: Record<string, string> = {
-    HAPPY: 'bi bi-emoji-smile', EXCITED: 'bi bi-stars', NEUTRAL: 'bi bi-emoji-neutral',
-    TIRED: 'bi bi-moon-stars', STRESSED: 'bi bi-exclamation-circle', SAD: 'bi bi-emoji-frown'
-  }
-  const badges: Record<string, string> = {
-    HAPPY: 'badge-happy', EXCITED: 'badge-excited', NEUTRAL: 'badge-neutral',
-    TIRED: 'badge-tired', STRESSED: 'badge-stressed', SAD: 'badge-sad'
-  }
-  return Object.entries(moodStatistics.value.moodEmotionCounts).map(([name, value]) => ({
-    name, value, icon: icons[name], badgeClass: badges[name]
-  }))
+  const counts = moodStatistics.value.moodEmotionCounts
+  return [
+    { name: 'Happy', value: counts['HAPPY'] ?? 0, icon: 'bi bi-emoji-smile', badgeClass: 'badge-happy' },
+    { name: 'Excited', value: counts['EXCITED'] ?? 0, icon: 'bi bi-stars', badgeClass: 'badge-excited' },
+    { name: 'Neutral', value: counts['NEUTRAL'] ?? 0, icon: 'bi bi-emoji-neutral', badgeClass: 'badge-neutral' },
+    { name: 'Tired', value: counts['TIRED'] ?? 0, icon: 'bi bi-moon-stars', badgeClass: 'badge-tired' },
+    { name: 'Stressed', value: counts['STRESSED'] ?? 0, icon: 'bi bi-exclamation-circle', badgeClass: 'badge-stressed' }
+  ]
 })
 
 function formatDate(dateStr?: string | null) {
@@ -297,29 +292,4 @@ onMounted(() => {
 }
 
 .switch-btn i { font-size: 18px; }
-
-.simple-pie-chart {
-  display: flex;
-  height: 40px;
-  border-radius: 8px;
-  overflow: hidden;
-  margin: 1rem;
-}
-
-.pie-segment {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: flex 0.3s ease;
-  min-width: 2px;
-}
-
-.pie-label {
-  font-size: 0.75rem;
-  color: white;
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
 </style>

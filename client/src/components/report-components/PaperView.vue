@@ -1,246 +1,299 @@
 <template>
-  <div class="paper-view">
-    <!-- Loading -->
-    <div v-if="loading" class="text-center py-5">
-      <div class="spinner-border text-success" role="status">
-        <span class="visually-hidden">Loading...</span>
+  <div class="container">
+    <div class="report-container" id="reportContainer" ref="exportHTML">
+      <div class="report-header">
+        <div class="report-title">Athlete Performance Report</div>
+        <div class="report-subtitle">Comprehensive Health & Performance Analysis</div>
       </div>
-      <p class="mt-2 text-muted">Loading report...</p>
+      <div class="patient-info">
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="info-label">Athlete Name</div>
+            <div class="info-value">{{ reportDetails?.patient }}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">EMBG</div>
+            <div class="info-value">{{ reportDetails?.embg }}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Doctor</div>
+            <div class="info-value">Dr. {{ reportDetails?.doctor }}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Height</div>
+            <div class="info-value">{{ reportDetails?.height }} cm</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Weight</div>
+            <div class="info-value">{{ reportDetails?.weight }} kg</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Status</div>
+            <span class="status-badge">{{ reportDetails?.status }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="results-section text-center">
+        <div class="section-title">Cardiovascular Performance</div>
+        <table class="results-table">
+          <thead>
+            <tr>
+              <th>Test Name</th>
+              <th>Result</th>
+              <th>Units</th>
+              <th>Reference Range</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="rep in report" :key="rep.label">
+              <td>{{ rep.label }}</td>
+              <td :class="flagColorClass(rep.level)">{{ rep.value }}</td>
+              <td>{{ getUnit(rep.label) }}</td>
+              <td :class="getReferenceRange(rep.label) !== '-' ? '' : 'fst-italic text-secondary'">
+                {{ getReferenceRange(rep.label) !== '-' ? getReferenceRange(rep.label) : 'No info provided' }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="footer">
+        <p><strong>Sports Medicine Center</strong> | Athlete360 Online Platform</p>
+        <p>Phone: (389) 75 622 486 | Confidential medical information</p>
+      </div>
     </div>
-
-    <!-- Error -->
-    <div v-else-if="error" class="alert alert-danger" role="alert">
-      {{ error }}
-    </div>
-
-    <!-- Report -->
-    <template v-else-if="report">
-      <div class="paper-header d-flex justify-content-between align-items-center mb-4 no-print">
-        <router-link to="/reports" class="btn btn-outline-success">
-          Back to Report
-        </router-link>
-        <button class="btn btn-outline-secondary" @click="printReport">
-          Print
-        </button>
-      </div>
-
-      <div class="paper-title text-center mb-4">
-        <h1>Athlete Health Report</h1>
-        <p class="text-muted">Generated {{ formatDate(report.createdAt) }}</p>
-      </div>
-
-      <!-- Patient Info -->
-      <section class="paper-section mb-4">
-        <h2 class="section-title">Patient Information</h2>
-        <div class="row">
-          <div class="col-sm-6 mb-2">
-            <strong>Patient:</strong> {{ report.patient }}
-          </div>
-          <div class="col-sm-6 mb-2">
-            <strong>Doctor:</strong> {{ report.doctor }}
-          </div>
-          <div class="col-sm-6 mb-2">
-            <strong>Status:</strong> {{ report.status }}
-          </div>
-          <div class="col-sm-6 mb-2">
-            <strong>Created:</strong> {{ formatDate(report.createdAt) }}
-          </div>
-        </div>
-      </section>
-
-      <!-- Physical Metrics -->
-      <section class="paper-section mb-4">
-        <h2 class="section-title">Physical Metrics</h2>
-        <div class="row">
-          <div class="col-sm-6 mb-2">
-            <strong>VO2 Max:</strong> {{ report.vo2Max.toFixed(2) }}
-          </div>
-          <div class="col-sm-6 mb-2">
-            <strong>Resting Heart Rate:</strong> {{ report.restingHeartRate }} bpm
-          </div>
-          <div class="col-sm-6 mb-2">
-            <strong>Under Pressure HR:</strong> {{ report.underPressureHeartRate }} bpm
-          </div>
-          <div class="col-sm-6 mb-2">
-            <strong>Avg Run per KM:</strong> {{ report.averageRunPerKilometer.toFixed(2) }}
-          </div>
-          <div class="col-sm-6 mb-2">
-            <strong>Height:</strong> {{ report.height }} cm
-          </div>
-          <div class="col-sm-6 mb-2">
-            <strong>Weight:</strong> {{ report.weight }} kg
-          </div>
-          <div class="col-sm-6 mb-2">
-            <strong>Body Fat:</strong> {{ report.bodyFatPercentage }}%
-          </div>
-          <div class="col-sm-6 mb-2" v-if="report.leanMuscleMass != null">
-            <strong>Lean Muscle Mass:</strong> {{ report.leanMuscleMass }}
-          </div>
-          <div class="col-sm-6 mb-2">
-            <strong>Bone Density:</strong> {{ report.boneDensity }}
-          </div>
-          <div class="col-sm-6 mb-2">
-            <strong>Balance Time:</strong> {{ report.balanceTime }}s
-          </div>
-          <div class="col-sm-6 mb-2">
-            <strong>Reaction Time:</strong> {{ report.reactionTime.toFixed(3) }}s
-          </div>
-          <div class="col-sm-6 mb-2">
-            <strong>Core Stability:</strong> {{ report.coreStabilityScore }}
-          </div>
-          <div class="col-sm-6 mb-2" v-if="report.shoulderFlexibility != null">
-            <strong>Shoulder Flexibility:</strong> {{ report.shoulderFlexibility }}
-          </div>
-          <div class="col-sm-6 mb-2" v-if="report.hipFlexibility != null">
-            <strong>Hip Flexibility:</strong> {{ report.hipFlexibility }}
-          </div>
-        </div>
-      </section>
-
-      <!-- Strength Metrics -->
-      <section class="paper-section mb-4">
-        <h2 class="section-title">Strength Metrics</h2>
-        <div class="row">
-          <div class="col-sm-6 mb-2" v-if="report.oneRepMaxBench != null">
-            <strong>One Rep Max Bench:</strong> {{ report.oneRepMaxBench }} kg
-          </div>
-          <div class="col-sm-6 mb-2" v-if="report.oneRepMaxSquat != null">
-            <strong>One Rep Max Squat:</strong> {{ report.oneRepMaxSquat }} kg
-          </div>
-          <div class="col-sm-6 mb-2" v-if="report.oneRepMaxDeadlift != null">
-            <strong>One Rep Max Deadlift:</strong> {{ report.oneRepMaxDeadlift }} kg
-          </div>
-          <div class="col-sm-6 mb-2" v-if="report.jumpHeight != null">
-            <strong>Jump Height:</strong> {{ report.jumpHeight }} cm
-          </div>
-          <div v-if="!hasAnyStrengthMetric" class="col-12 text-muted">
-            No strength metrics recorded.
-          </div>
-        </div>
-      </section>
-
-      <!-- Lab Results -->
-      <section class="paper-section mb-4">
-        <h2 class="section-title">Lab Results</h2>
-        <div class="row">
-          <div class="col-sm-6 mb-2">
-            <strong>Hemoglobin:</strong> {{ report.hemoglobin }}
-          </div>
-          <div class="col-sm-6 mb-2">
-            <strong>Glucose:</strong> {{ report.glucose }}
-          </div>
-          <div class="col-sm-6 mb-2">
-            <strong>Creatinine:</strong> {{ report.creatinine }}
-          </div>
-          <div class="col-sm-6 mb-2">
-            <strong>Vitamin D:</strong> {{ report.vitaminD }}
-          </div>
-          <div class="col-sm-6 mb-2">
-            <strong>Iron:</strong> {{ report.iron }}
-          </div>
-          <div class="col-sm-6 mb-2">
-            <strong>Testosterone:</strong> {{ report.testosterone }}
-          </div>
-          <div class="col-sm-6 mb-2">
-            <strong>Cortisol:</strong> {{ report.cortisol }}
-          </div>
-        </div>
-      </section>
-    </template>
+  </div>
+  <div class="text-center">
+    <button @click="exportToPdf" class="export-pdf-button">Export As PDF</button>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import html2canvas from 'html2canvas'
+import jsPDF from 'jspdf'
 import { reportService } from '../../services/reportService'
-import type { ReportDetails } from '../../types'
+import { METRICS_NAMES, REPORT_METRICS_RANGES, REPORT_METRICS_UNITS } from '../../constants/reportMetrics'
+import type { ReportDetails, ReportFlags, FlagLevel } from '../../types'
 
 const route = useRoute()
-const reportId = computed(() => Number(route.params.id))
-const report = ref<ReportDetails | null>(null)
-const loading = ref(true)
-const error = ref<string | null>(null)
+const exportHTML = ref<HTMLElement | null>(null)
 
-const hasAnyStrengthMetric = computed(() => {
-  if (!report.value) return false
-  return (
-    report.value.oneRepMaxBench != null ||
-    report.value.oneRepMaxSquat != null ||
-    report.value.oneRepMaxDeadlift != null ||
-    report.value.jumpHeight != null
-  )
-})
+const reportDetails = ref<ReportDetails | null>(null)
+const reportFlags = ref<ReportFlags | null>(null)
+const report = ref<{ label: string; value: number; level: FlagLevel | undefined }[]>([])
 
-function printReport() {
-  window.print()
+function fillReportObject() {
+  if (!reportDetails.value) return
+  const result: { label: string; value: number; level: FlagLevel | undefined }[] = []
+  for (const metric of METRICS_NAMES) {
+    const flagObj = (reportFlags.value as any)?.[metric]
+    if (flagObj) {
+      result.push({ label: metric, value: flagObj.value, level: flagObj.level })
+    } else {
+      const value = (reportDetails.value as any)?.[metric]
+      if (value !== undefined && value !== null) {
+        result.push({ label: metric, value, level: undefined })
+      }
+    }
+  }
+  report.value = result
 }
 
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
+function getUnit(metric: string): string {
+  return REPORT_METRICS_UNITS[metric] || ''
+}
+
+function getReferenceRange(metric: string): string {
+  return REPORT_METRICS_RANGES[metric] || '-'
+}
+
+function flagColorClass(level?: string) {
+  switch (level) {
+    case 'RED':
+      return 'val-red'
+    case 'YELLOW':
+      return 'val-yellow'
+    case 'GREEN':
+      return 'val-green'
+    default:
+      return ''
+  }
+}
+
+function exportToPdf() {
+  if (!exportHTML.value) return
+  html2canvas(exportHTML.value).then(canvas => {
+    const imgData = canvas.toDataURL('image/png')
+    const pdf = new jsPDF('p', 'mm', 'a4')
+    const imgProps = pdf.getImageProperties(imgData)
+    const pdfWidth = pdf.internal.pageSize.getWidth()
+    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width - 20
+    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight)
+    pdf.save(`${reportDetails.value?.patient}-${reportDetails.value?.reportId}.pdf`)
   })
 }
 
 onMounted(async () => {
-  try {
-    const res = await reportService.getReportById(reportId.value)
-    report.value = res.data
-  } catch (e: any) {
-    error.value = e.response?.data?.message || 'Failed to load report.'
-  } finally {
-    loading.value = false
-  }
+  const id = Number(route.params.id)
+  if (!id) return
+  const [detailsRes, flagsRes] = await Promise.all([
+    reportService.getReportById(id),
+    reportService.getReportFlags(id)
+  ])
+  reportDetails.value = detailsRes.data
+  reportFlags.value = flagsRes.data
+  fillReportObject()
 })
 </script>
 
 <style scoped>
-.paper-view {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 2rem;
-  font-family: 'Times New Roman', Times, serif;
-  color: #1a1a1a;
+.container {
+  max-width: 1000px;
+  margin: 30px auto;
+  padding: 20px;
+  background: #fff;
+  border: 2px solid #ddd;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+}
+
+.report-header {
+  text-align: center;
+  padding: 15px;
+  border-bottom: 3px solid #1a75bc;
+}
+
+.report-title {
+  font-size: 26px;
+  font-weight: bold;
+  color: #1a75bc;
+}
+
+.report-subtitle {
+  font-size: 15px;
+  color: #555;
+}
+
+.patient-info {
+  background: #f5faff;
+  padding: 15px;
+  border: 1px solid #d6e9f5;
+  border-radius: 6px;
+  margin-top: 20px;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.info-label {
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: #333;
+}
+
+.info-value {
+  font-size: 14px;
+}
+
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+  color: #222222;
+  display: inline-block;
 }
 
 .section-title {
-  font-size: 1.25rem;
-  border-bottom: 2px solid #386641;
-  padding-bottom: 0.5rem;
-  margin-bottom: 1rem;
-  color: #386641;
+  font-weight: bold;
+  margin: 25px 0 8px;
+  font-size: 17px;
+  border-bottom: 2px solid #1a75bc;
+  padding-bottom: 4px;
+  color: #1a75bc;
 }
 
-.paper-title h1 {
-  font-size: 2rem;
-  color: #1a1a1a;
-  margin-bottom: 0.25rem;
+.results-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  margin-bottom: 20px;
 }
 
-.paper-section .row > div {
-  padding: 0.25rem 0;
+.results-table th, .results-table td {
+  border: 1px solid #ccc;
+  padding: 8px 10px;
+  text-align: left;
 }
 
-@media print {
-  .no-print {
-    display: none !important;
-  }
+.results-table th {
+  background-color: #f1f5f9;
+  font-weight: bold;
+  text-align: center;
+}
 
-  .paper-view {
-    max-width: none;
-    padding: 0;
-  }
+.results-table tbody tr:nth-child(even) {
+  background-color: #fafafa;
+}
 
-  .paper-section {
-    page-break-inside: avoid;
-  }
+.results-table tbody tr:hover {
+  background-color: #f0f7ff;
+}
 
-  .section-title {
-    border-bottom-color: #000;
-  }
+tbody tr td + td {
+  text-align: center;
+}
+
+tbody tr td:nth-child(3) {
+  font-style: italic;
+  color: #6c757d;
+}
+
+.footer {
+  border-top: 2px solid #ccc;
+  padding-top: 10px;
+  font-size: 12px;
+  color: #555;
+  text-align: center;
+  margin-top: 30px;
+}
+
+.val-yellow {
+  color: #d39e00;
+  font-weight: bold;
+}
+
+.val-red {
+  color: #d9534f;
+  font-weight: bold;
+}
+
+.val-green {
+  color: #1f7a1f;
+  font-weight: bold;
+}
+
+.export-pdf-button {
+  background: linear-gradient(135deg, #e53935, #b71c1c);
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.25s ease-in-out;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+  letter-spacing: 1px;
 }
 </style>
